@@ -2,7 +2,7 @@
   "expo": {
     "name": "umbrella-tasks",
     "slug": "umbrella-tasks",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "umbrellatasks",
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.umbrella.tasks"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "40a3f1da-69bf-4eae-b9f1-e9a5ed991034"
+      }
+    },
+    "owner": "ibo.umbrel"
   }
 }
