@@ -1,220 +1,241 @@
+import { Colors } from "@/constants/Colors";
 import { Task, TaskStatus } from "@/store/taskStore";
-import BottomSheet from "@gorhom/bottom-sheet";
 import DateTimePicker, {
-    DateTimePickerEvent,
+    DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
-import { Picker } from "@react-native-picker/picker";
+import { useEffect, useRef, useState } from "react";
 import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
-import {
+    Animated,
     Button,
+    Dimensions,
+    Modal,
     Platform,
     Pressable,
     StyleSheet,
     Text,
-    TextInput,
-    View,
+    useColorScheme,
+    View
 } from "react-native";
+import Input from "./Input";
+import PickerInput from "./PickerInput";
 
 interface TaskDetailModalProps {
     task: Task | null;
     isOpen: boolean;
-    onClose: () => void;
+    onClose?: () => void;
     onSave: (updatedTask: Task) => void;
 }
 
-const TaskDetailModal: React.FC<TaskDetailModalProps> = (
-    {
-        task,
-        isOpen,
-        onClose,
-        onSave,
-    }) =>
-{
-    const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["50%", "90%"], []);
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 
+const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
+    task,
+    isOpen,
+    onClose,
+    onSave,
+}) => {
+    const colorScheme = useColorScheme() ?? "light";
     const [editableTask, setEditableTask] = useState<Task | null>(task);
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [iosDate, setIosDate] = useState<Date | null>(null);
+    const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
-    useEffect(() =>
-    {
-        if (isOpen && task)
-        {
-            sheetRef.current?.expand();
+    const styles = StyleSheet.create({
+        backdrop: {
+            flex: 1,
+            backgroundColor: "#00000055",
+        },
+        sheet: {
+            position: "absolute",
+            bottom: 0,
+            width: "100%",
+            backgroundColor: Colors[colorScheme].panel,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            maxHeight: "90%",
+            overflow: "hidden",
+        },
+        container: {
+            padding: 20,
+        },
+        label: {
+            marginTop: 12,
+            fontSize: 12,
+            color: Colors[colorScheme].accent
+        },
+        input: {
+            borderBottomWidth: 1,
+            borderColor: Colors[colorScheme].text,
+            paddingVertical: 6,
+            marginBottom: 10,
+        },
+        picker: {
+            height: 50,
+            marginBottom: 10,
+        },
+        timestamp: {
+            fontSize: 12,
+            color: Colors[colorScheme].other_text,
+            marginTop: 10,
+        },
+        buttonGroup: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: 20,
+        },
+    });
+
+    useEffect(() => {
+        if (isOpen && task) {
             setEditableTask(task);
-        }
-        else
-        {
-            sheetRef.current?.close();
+            setIosDate(
+                task.executionAt ? new Date(task.executionAt) : new Date()
+            );
+            Animated.timing(translateY, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(translateY, {
+                toValue: SCREEN_HEIGHT,
+                duration: 200,
+                useNativeDriver: true,
+            }).start();
         }
     }, [isOpen, task]);
 
-    const handleSave = useCallback(() =>
-    {
+    const showDatePicker = () => {
+        if (Platform.OS === "android") {
+            DateTimePickerAndroid.open({
+                value: editableTask?.executionAt
+                    ? new Date(editableTask.executionAt)
+                    : new Date(),
+                // mode: "date",
+                is24Hour: true,
+                onChange: (_event, date) => {
+                    if (date && editableTask) {
+                        setEditableTask({
+                            ...editableTask,
+                            executionAt: date.getTime(),
+                        });
+                    }
+                },
+            });
+        }
+    };
+
+    const handleSave = () => {
         if (editableTask) {
             onSave({ ...editableTask, updatedAt: Date.now() });
         }
-        onClose();
-    }, [editableTask]);
+        onClose?.();
+    };
 
-    const handleDateChange = (event: DateTimePickerEvent, date?: Date) =>
-    {
-        setShowDatePicker(false);
-        if (event.type === "set" && date && editableTask) {
-            setEditableTask({ ...editableTask, executionAt: date.getTime() });
+    const handleIosChange = (_event: any, selectedDate?: Date) => {
+        if (selectedDate && editableTask) {
+            setIosDate(selectedDate);
+            setEditableTask({
+                ...editableTask,
+                executionAt: selectedDate.getTime(),
+            });
         }
     };
 
     if (!editableTask) return null;
 
     return (
-        <BottomSheet
-            ref={sheetRef}
-            index={-1}
-            snapPoints={snapPoints}
-            onClose={onClose}
-            enablePanDownToClose
+        <Modal
+            visible={isOpen}
+            transparent
+            animationType="none"
+            onRequestClose={onClose}
         >
-            <View style={styles.container}>
-                <Text style={styles.label}>Title</Text>
-                <TextInput
-                    style={styles.input}
-                    value={editableTask.title}
-                    onChangeText={(text) =>
-                        setEditableTask({ ...editableTask, title: text })
-                    }
-                />
-
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                    style={styles.input}
-                    value={editableTask.description ?? ""}
-                    onChangeText={(text) =>
-                        setEditableTask({ ...editableTask, description: text })
-                    }
-                />
-
-                <Text style={styles.label}>Location</Text>
-                <TextInput
-                    style={styles.input}
-                    value={editableTask.location ?? ""}
-                    onChangeText={(text) =>
-                        setEditableTask({ ...editableTask, location: text })
-                    }
-                />
-
-                <Text style={styles.label}>Status</Text>
-                <Picker
-                    selectedValue={editableTask.status}
-                    onValueChange={(value) =>
-                        setEditableTask({
-                            ...editableTask,
-                            status: value as TaskStatus,
-                        })
-                    }
-                    style={
-                        Platform.OS === "android" ? styles.picker : undefined
-                    }
-                >
-                    <Picker.Item
-                        label="Pending"
-                        value="pending"
+            <Pressable
+                style={styles.backdrop}
+                onPress={onClose}
+            />
+            <Animated.View
+                style={[styles.sheet, { transform: [{ translateY }] }]}
+            >
+                <View style={styles.container}>
+                    <Input
+                        label="Title"
+                        value={editableTask.title}
+                        onChangeText={(text) => setEditableTask({ ...editableTask, title: text })}
                     />
-                    <Picker.Item
-                        label="In Progress"
-                        value="in-progress"
+                    <Input
+                        label="Description"
+                        value={editableTask.description}
+                        onChangeText={(text) => setEditableTask({ ...editableTask, description: text })}
                     />
-                    <Picker.Item
-                        label="Completed"
-                        value="completed"
+                    <Input
+                        label="Location"
+                        value={editableTask.location}
+                        onChangeText={(text) => setEditableTask({ ...editableTask, location: text })}
                     />
-                    <Picker.Item
-                        label="Canceled"
-                        value="canceled"
-                    />
-                </Picker>
-
-                <Text style={styles.label}>Execution Time</Text>
-                <Pressable
-                    onPress={() => setShowDatePicker(true)}
-                    style={styles.input}
-                >
-                    <Text>
-                        {editableTask.executionAt
-                            ? new Date(
-                                  editableTask.executionAt
-                              ).toLocaleString()
-                            : "Select time"}
-                    </Text>
-                </Pressable>
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={
-                            editableTask.executionAt
-                                ? new Date(editableTask.executionAt)
-                                : new Date()
+                    <PickerInput
+                        label="Status"
+                        selectedValue={editableTask.status}
+                        onValueChange={(value) =>
+                            setEditableTask({
+                                ...editableTask,
+                                status: value as TaskStatus,
+                            })
                         }
-                        mode="datetime"
-                        display={Platform.OS === "ios" ? "inline" : "default"}
-                        onChange={handleDateChange}
+                        items={[
+                            { label: "Pending", value: "pending" },
+                            { label: "In Progress", value: "in-progress" },
+                            { label: "Completed", value: "completed" },
+                            { label: "Canceled", value: "canceled" },
+                        ]}
                     />
-                )}
 
-                <Text style={styles.timestamp}>
-                    Created At:{" "}
-                    {new Date(editableTask.createdAt).toLocaleString()}
-                </Text>
+                    <Text style={styles.label}>Execution Time</Text>
+                    <Pressable
+                        onPress={showDatePicker}
+                        style={styles.input}
+                    >
+                        <Text
+                            style={{color: Colors[colorScheme].text}}
+                        >
+                            {editableTask.executionAt
+                                ? new Date(
+                                      editableTask.executionAt
+                                  ).toLocaleString()
+                                : "Select time"}
+                        </Text>
+                    </Pressable>
 
-                <View style={styles.buttonGroup}>
-                    <Button
-                        title="Save"
-                        onPress={handleSave}
-                    />
-                    <Button
-                        title="Cancel"
-                        color="red"
-                        onPress={onClose}
-                    />
+                    {Platform.OS === "ios" && (
+                        <DateTimePicker
+                            value={iosDate ?? new Date()}
+                            mode="datetime"
+                            display="inline"
+                            onChange={handleIosChange}
+                        />
+                    )}
+
+                    <Text style={styles.timestamp}>
+                        Created At:{" "}
+                        {new Date(editableTask.createdAt).toLocaleString()}
+                    </Text>
+
+                    <View style={styles.buttonGroup}>
+                        <Button
+                            title="Save"
+                            color={Colors[colorScheme].accent}
+                            onPress={handleSave}
+                        />
+                        <Button
+                            title="Cancel"
+                            color={Colors[colorScheme].background}
+                            onPress={onClose}
+                        />
+                    </View>
                 </View>
-            </View>
-        </BottomSheet>
+            </Animated.View>
+        </Modal>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-    },
-    label: {
-        fontWeight: "bold",
-        marginTop: 12,
-    },
-    input: {
-        borderBottomWidth: 1,
-        borderColor: "#ccc",
-        paddingVertical: 6,
-        marginBottom: 10,
-    },
-    picker: {
-        height: 50,
-        marginBottom: 10,
-    },
-    timestamp: {
-        fontSize: 12,
-        color: "#666",
-        marginTop: 10,
-    },
-    buttonGroup: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 20,
-    },
-});
 
 export default TaskDetailModal;

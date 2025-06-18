@@ -7,10 +7,11 @@ import { StyleSheet, Text, TouchableNativeFeedback, TouchableNativeFeedbackProps
 type TaskItemProps =
 {
     task: Task;
-} & TouchableNativeFeedbackProps;
+    onPress?: TouchableNativeFeedbackProps["onPress"];
+};
 
 
-const TaskItem = (props: TaskItemProps) =>
+const TaskItem = ({task, onPress}: TaskItemProps) =>
 {
     const colorScheme = useColorScheme() ?? "light";
     const getStatusColor = (status: TaskStatus) =>
@@ -69,29 +70,29 @@ const TaskItem = (props: TaskItemProps) =>
 
 
     return (
-        <TouchableNativeFeedback {...props}>
+        <TouchableNativeFeedback onPress={onPress}>
             <View style={styles.container}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>{props.task.title}</Text>
+                    <Text style={styles.title}>{task.title}</Text>
                     <View
                         style={[
                             styles.statusBadge,
-                            { backgroundColor: getStatusColor(props.task.status) },
+                            { backgroundColor: getStatusColor(task.status) },
                         ]}
                     >
                         <Text style={styles.statusText}>
-                            {props.task.status.replace("-", " ")}
+                            {task.status.replace("-", " ")}
                         </Text>
                     </View>
                 </View>
                 <Text style={styles.dateText}>
-                    {format(new Date(props.task.createdAt), "MMM d, yyyy • h:mm a")}
+                    {format(new Date(task.createdAt), "MMM d, yyyy • h:mm a")}
                 </Text>
                 {
-                    props.task.executionAt
+                    task.executionAt
                     ?
                     <Text style={styles.dateText}>
-                        Execution: {format(new Date(props.task.executionAt), "MMM d, yyyy • h:mm a")}
+                        Execution: {format(new Date(task.executionAt), "MMM d, yyyy • h:mm a")}
                     </Text>
                     :
                     null

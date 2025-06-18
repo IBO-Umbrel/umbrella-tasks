@@ -27,7 +27,7 @@ export interface Task
 interface TaskStore
 {
     tasks: Task[];
-    addTask: (title: string, description?: string, executionAt?: number) => void;
+    addTask: (title: string, description?: string, executionAt?: number) => Task;
     getTaskById: (id: string) => Task | undefined;
     getTasksByStatus: (status: TaskStatus) => Task[];
     updateTask: (
@@ -57,6 +57,7 @@ export const useTaskStore = create<TaskStore>()(
                     updatedAt: Date.now()
                 };
                 set({ tasks: [newTask, ...get().tasks] });
+                return newTask;
             },
             getTaskById: (id) =>
             {
