@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { FlatList, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 
-export default function TasksInProgressScreen()
+export default function TasksCompletedScreen()
 {
     const navigation = useNavigation();
     const colorScheme = useColorScheme() ?? "light";
@@ -23,7 +23,7 @@ export default function TasksInProgressScreen()
     const refresh = () =>
     {
         setRefreshing(true);
-        const progressing_tasks = getTasksByStatus("in-progress");
+        const progressing_tasks = getTasksByStatus("completed");
         setData(progressing_tasks);
         setRefreshing(false);
     };
@@ -32,7 +32,7 @@ export default function TasksInProgressScreen()
         setSelectedTask({
             id: "",
             title: "",
-            status: "in-progress",
+            status: "completed",
             createdAt: 0,
             updatedAt: 0,
         });

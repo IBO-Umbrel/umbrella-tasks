@@ -1,17 +1,29 @@
-import TaskDetailModal from "@/components/TaskDetailModal";
+import { useTaskDetails } from "@/components/TaskDetailProvider";
 import TaskItem from "@/components/TaskItem";
-import { Task, useTaskStore } from "@/store/taskStore";
-import { useState } from "react";
-import { Button, FlatList, View } from "react-native";
+import { Colors } from "@/constants/Colors";
+import { useTaskStore } from "@/store/taskStore";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useIsFocused } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
+import { useEffect, useState } from "react";
+import { FlatList, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 
-export default function AllTasksScreen()
+export default function TasksAllScreen()
 {
-    const { tasks, addTask, updateTask } = useTaskStore();
-    const [detailsOpen, setDetailsOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const navigation = useNavigation();
+    const colorScheme = useColorScheme() ?? "light";
+    const { tasks } = useTaskStore();
+    const {setDetailsOpen, setSelectedTask} = useTaskDetails();
+    const isFocused = useIsFocused();
+    const [refreshing, setRefreshing] = useState(false);
 
 
+    const refresh = () =>
+    {
+        setRefreshing(true);
+        setRefreshing(false);
+    };
     const add_task_handle = () =>
     {
         setSelectedTask({
@@ -23,29 +35,73 @@ export default function AllTasksScreen()
         });
         setDetailsOpen(true);
     };
+    useEffect(() =>
+    {
+        if (isFocused)
+        {
+            navigation.getParent()?.setOptions({
+                headerRight()
+                {
+                    return (
+                        <TouchableOpacity onPress={add_task_handle}>
+                            <View
+                                style={{
+                                    backgroundColor: Colors[colorScheme].accent,
+                                    paddingVertical: 5,
+                                    paddingHorizontal: 10,
+                                    paddingRight: 15,
+                                    borderRadius: 100,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    elevation: 2
+                                }}
+                            >
+                                <MaterialIcons
+                                    name="add"
+                                    size={25}
+                                    color={Colors[colorScheme].text}
+                                />
+                                <Text
+                                    style={{
+                                        color: Colors[colorScheme].text,
+                                        fontWeight: "500",
+                                    }}
+                                >Add</Text>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                }
+            });
+        }
+    }, [isFocused]);
 
 
     return (
         <View
-            style={{
-                flex: 1,
-                // padding: 16
-            }}
+            style={{flex:1}}
         >
-            <Button
-                title="Add Task"
-                onPress={add_task_handle}
-            />
             <FlatList
                 data={tasks}
+                refreshing={refreshing}
+                onRefresh={refresh}
                 keyExtractor={(item) => item.id}
-                // style={{
-                //     flex: 1,
-                //     height:
-                // }}
                 contentContainerStyle={{
                     gap: 10,
                     padding: 10
+                }}
+                ListEmptyComponent={() =>
+                {
+                    return (
+                        <Text
+                            style={{
+                                color: Colors[colorScheme].text,
+                                textAlign: "center",
+                                fontSize: 20,
+                                marginTop: 15
+                            }}
+                        >No Tasks Available</Text>
+                    );
                 }}
                 renderItem={(args) =>
                 {
@@ -60,21 +116,6 @@ export default function AllTasksScreen()
                         />
                     );
                 }}
-            />
-
-            <TaskDetailModal
-                task={selectedTask}
-                isOpen={detailsOpen}
-                onSave={(task) =>
-                {
-                    if (task.id === "")
-                    {
-                        const created_task = addTask(task.title, task.description, task.executionAt);
-                        updateTask(created_task.id, task);
-                    }
-                    updateTask(task.id, task);
-                }}
-                onClose={() => setDetailsOpen(false)}
             />
         </View>
     );

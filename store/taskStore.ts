@@ -1,14 +1,9 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
-export function generate_task_id()
-{
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 6);
-    return `task-${timestamp}${random}`;
-}
+
 
 
 // Types
@@ -38,14 +33,19 @@ interface TaskStore
     clearAllTasks: () => void;
 }
 
-
+export function generate_task_id()
+{
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    return `task-${timestamp}${random}`;
+}
 
 // Store
 export const useTaskStore = create<TaskStore>()(
     persist(
         (set, get) => ({
             tasks: [],
-            addTask: (title, description, executionAt) =>
+            addTask: (title = "default", description, executionAt) =>
             {
                 const newTask: Task = {
                     id: generate_task_id(),

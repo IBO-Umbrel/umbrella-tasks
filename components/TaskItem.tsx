@@ -38,7 +38,7 @@ const TaskItem = ({task, onPress}: TaskItemProps) =>
             shadowColor: "#000",
             shadowOpacity: 0.05,
             shadowRadius: 4,
-            shadowOffset: { width: 0, height: 2 },
+            shadowOffset: { width: 0, height: 2 }
         },
         row: {
             flexDirection: "row",
@@ -53,7 +53,6 @@ const TaskItem = ({task, onPress}: TaskItemProps) =>
         dateText: {
             fontSize: 12,
             color: Colors[colorScheme].other_text,
-            marginTop: 4,
         },
         statusBadge: {
             paddingVertical: 4,
@@ -85,8 +84,31 @@ const TaskItem = ({task, onPress}: TaskItemProps) =>
                         </Text>
                     </View>
                 </View>
-                <Text style={styles.dateText}>
-                    {format(new Date(task.createdAt), "MMM d, yyyy • h:mm a")}
+                {
+                    task.description
+                    ?
+                    <Text
+                        style={{
+                            color: Colors[colorScheme].other_text,
+                            marginTop: 10
+                        }}
+                    >
+                        {task.description}
+                    </Text>
+                    :
+                    null
+                }
+                {
+                    task.location
+                    ?
+                    <Text style={[styles.dateText, {marginTop: 10}]}>
+                        Location: {task.location}
+                    </Text>
+                    :
+                    null
+                }
+                <Text style={[styles.dateText, {marginTop: 10}]}>
+                    Creation: {format(new Date(task.createdAt), "MMM d, yyyy • h:mm a")}
                 </Text>
                 {
                     task.executionAt
