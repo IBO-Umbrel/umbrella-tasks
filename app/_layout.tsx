@@ -1,3 +1,5 @@
+// _layout.tsx (Root Layout)
+// Sets up the app's core structure, navigation, and providers.
 import { TaskDetailProvider } from "@/components/TaskDetailProvider";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
@@ -15,11 +17,12 @@ export default function RootLayout()
 {
     const router = useRouter();
     const colorScheme = useColorScheme() ?? "light";
+    // Load custom font (SpaceMono) for consistent typography.
     const [font_loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     });
 
-
+    // Redirect to the "All Tasks" screen on app load.
     useEffect(() =>
     {
         const timeout = setTimeout(() => router.navigate("/tasks/all"), 0);
@@ -27,12 +30,13 @@ export default function RootLayout()
         return () => clearTimeout(timeout);
     }, []);
 
-
+    // Wait for fonts to load before rendering the app.
     if (!font_loaded)
     {
         return null;
     }
     return (
+        // Applies light or dark theme based on device settings.
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
             <KeyboardProvider>
                 <TaskDetailProvider>
@@ -41,6 +45,7 @@ export default function RootLayout()
                             // headerShown: false,
                             navigationBarHidden: true,
                             headerShadowVisible: false,
+                            // Displays app icon in the header.
                             headerLeft()
                             {
                                 return (

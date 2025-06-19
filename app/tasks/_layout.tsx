@@ -1,3 +1,5 @@
+// tasks/_layout.tsx
+// Configures the top-tab navigator for task status screens.
 import { Colors } from "@/constants/Colors";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { withLayoutContext } from "expo-router";
@@ -30,6 +32,7 @@ export default function TasksLayout()
                 // swipeEnabled: false
             }}
         >
+            {/* Defines screens for each task status */}
             <TopTabs.Screen
                 name="all"
                 options={{ title: "All" }}

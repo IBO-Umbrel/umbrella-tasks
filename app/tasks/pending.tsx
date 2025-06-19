@@ -1,3 +1,5 @@
+// pending.tsx
+// Displays tasks with "Pending" status in a list.
 import { useTaskDetails } from "@/components/TaskDetailProvider";
 import TaskItem from "@/components/TaskItem";
 import { Colors } from "@/constants/Colors";
@@ -13,13 +15,14 @@ export default function TasksPendingScreen()
 {
     const navigation = useNavigation();
     const colorScheme = useColorScheme() ?? "light";
-    const { tasks, getTasksByStatus } = useTaskStore();
-    const {setDetailsOpen, setSelectedTask} = useTaskDetails();
+    const { tasks, getTasksByStatus } = useTaskStore(); // Access task state.
+    const {setDetailsOpen, setSelectedTask} = useTaskDetails(); // Manage task details modal.
     const [data, setData] = useState(tasks);
     const [refreshing, setRefreshing] = useState(false);
     const isFocused = useIsFocused();
 
 
+    // Refresh task list func for the current status.
     const refresh = () =>
     {
         setRefreshing(true);
@@ -27,6 +30,8 @@ export default function TasksPendingScreen()
         setData(progressing_tasks);
         setRefreshing(false);
     };
+
+    // Open modal to add a new task.
     const add_task_handle = () =>
     {
         setSelectedTask({
@@ -38,11 +43,15 @@ export default function TasksPendingScreen()
         });
         setDetailsOpen(true);
     };
+
+    // Updates task list and header when screen is focused.
     useEffect(() =>
     {
         if (isFocused)
         {
             refresh();
+
+            // Adds "Add" button to header.
             navigation.getParent()?.setOptions({
                 headerRight()
                 {
@@ -94,6 +103,7 @@ export default function TasksPendingScreen()
                     gap: 10,
                     padding: 10
                 }}
+                // Display message when no tasks are available.
                 ListEmptyComponent={() =>
                 {
                     return (
